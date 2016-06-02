@@ -49,8 +49,10 @@
       let date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
       console.log(`\n==> Message read by: ${ack.user.first_name} at ${date}`);
     },
-    bot_uuid = "9a6da0cd-8e39-4665-971a-64820c419d85",
-    access_token = "mXW1ddRT37U4-RsXieeeI1IU8uSPLds-";
+    //Bot UUID goes here
+    bot_uuid = "",
+    //Bot access token goes here
+    access_token = "";
 
   new Avaamo(bot_uuid, access_token, printMessage, printAck, false);
 
