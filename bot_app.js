@@ -18,6 +18,8 @@
           break;
         case "IMAGE":
           avaamo.sendImage("assets/superman.jpg", "I am Clark Kent. I have another name - Kal. I am the SUPERMAN.", payload.conversation.uuid);
+          // avaamo.sendImage("assets/dance.gif", "Hilarious dance gif", payload.conversation.uuid);
+          // avaamo.sendImage("assets/broadcast.png", "Broadcast screenshot", payload.conversation.uuid);
           break;
         case "FILE":
           avaamo.sendFile("assets/relativity.pdf", payload.conversation.uuid);
@@ -49,8 +51,10 @@
       let date = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
       console.log(`\n==> Message read by: ${ack.user.first_name} at ${date}`);
     },
-    bot_uuid = "9a6da0cd-8e39-4665-971a-64820c419d85",
-    access_token = "mXW1ddRT37U4-RsXieeeI1IU8uSPLds-";
+    //bot uuid goes here
+    bot_uuid = "",
+    //bot access token goes here
+    access_token = "";
 
   new Avaamo(bot_uuid, access_token, printMessage, printAck, false);
 
