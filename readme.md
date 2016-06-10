@@ -4,7 +4,7 @@ This is Avaamo Bot SDK written in JavaScript targeting Node.js for implementing 
 
 To implement a custom bots, you need to have [Avaamo Premium] account.
 
-Once you are familiar with Avaamo Premium Dashboard, create a bot from the dashboard and grab the bot-uuid and access-token.
+Once you are familiar with Avaamo Premium Dashboard, [create a bot from the dashboard and grab the bot-uuid and access-token by following the steps mentioned in the wiki].
 
 This repository will help you to implement a custom bot with samples written in JavaScript.
 
@@ -13,8 +13,10 @@ The repository has `lib` and `assets` directory which you need not worry about. 
 The `bot_app.js` file is the sample bot application which has the example code.
 
 ## Pre-requisite
-Node.js version >= 5.2.0
-NPM version >= 3.3.0
+Node.js version >= 4.2.4
+
+NPM version >= 2.14.12
+
 Novice level Server-Side JavaScript knowledge would be good enough.
 
 To give a bit of an overview about the bot implementation, bots are treated as another user in the Avaamo platform. Once you create a bot from the dashboard, it will appear in the Avaamo messaging application for your group of users or your company members. Any user from your group/company can send message to the bot. How will the bot respond to the messages sent to it? This repository is built to answer this question.
@@ -31,97 +33,230 @@ require('./lib/avaamo').Avaamo
 **NOTE: The SDK has few NPM dependencies. Run `npm install` at the where `package.json` file is present.**
 
 ## Step 2: Instantiating `Avaamo` class
-The Avaamo SDK exports the primary class `Avaamo` which takes 4 arguments: bot-uuid, bot-access-token, message callback and acknowledgement callback as given below:
+The Avaamo SDK exports the primary class `Avaamo` which takes 5 arguments: bot-uuid, bot-access-token, message callback, acknowledgement callback, activity callback as given below:
 
 ```
 (function myBot() {
   let bot_uuid = "<bot-uuid>",
     access_token = "<bot-access-token>";
 
-  new Avaamo(bot_uuid, access_token, printMessage, printAck, false);
+  new Avaamo(bot_uuid, access_token, printMessage, printAck, printActivity, false);
 })();
 ```
 
 ## Step 3: Implementing Message Callbacks
 This step involves two sub-steps.
 
-### 3.1 Understanding the message
+### 3.1 Understanding the message object
 The callback should take two parameters: the message object and the Avaamo object(object instantiated in the previous step).
 
-The message object contains the message sent by the users of your bot. It has other supporting information also. Feel free to print and check the fields inside the object. The structure of a typical message with file attachment is given below:
-
 ```
-  {
-    "uuid": "cd77d610-225b-11e6-b798-e7a357b7aece",
-    "content": "",
-    "content_type": "file",
-    "created_at": 1464168836.769,
-    "user": {
-      "first_name": "Jebin",
-      "last_name": "B V",
-      "layer_id": "ce78d710-225b-22e6-b798-e7a357b7a123",
-      "email": "xyxy@yahooya.com"
-    },
-    "attachments": {
-      "files": [
-        {
-          "name": "ExBoxes.js",
-          "type": "unknown",
-          "size": 3713,
-          "content_type": "text/javascript",
-          "uid": 4212,
-          "uuid": 4212,
-          "preview": false,
-          "meta": null
-        }
-      ]
-    },
-    "conversation": {
-      "uuid": "1c76c16d6f5e5b2647d4adb180ef156d",
-      "mode": false
-    }
-  }
+function printMessage(payload, avaamo) {
+  //Process incoming message
+  //Reply back to the conversation
+}
 ```
 
-To give you a fair idea of what is in the object, it has the following properties:
+The first argument which is the message object has 3 properties: `message`, `user` and `conversation`. We will focus only on the `message` property which has all required information.
 
-`content` - The actual message content sent by the user (hi, hello, whatever). This will be can be empty for few content types.
+The `message` property is of type `Message` which has the following properties and methods:
 
-`content_type` - The `content_type` will have one of the following values (text, file, richtext, image, photo, video, audio, contact, location, form_response)
-    Based on the `content_type` will help you to identify the type of the message and act accordingly. Other than text and richtext, all the content_type indicates there is an attachment sent.
+```
+//Get the message object
+let message = payload.message;
 
-`attachments` - This field will be empty for text and richtext. In case of non text `content_type`, this field will have a corresponding object.
+//properties of message
+message.content
+message.content_type
+message.attachments
+message.conversation_uuid
+message.uuid
+message.created_at
 
-`user` - This field helps to capture the message sender details like name, email, user_uuid, and phone.
+//METHODS
 
-`conversation` - This field gives the conversation uuid. This uuid can be used to post messages back to the same conversation.
+//returns the message content
+message.getContent()
 
-`created_at` - Message created time in timestamp(seconds)
+//returns the message content type which could be one of these strings:
+//"text","file","video","audio","photo""image","form_response"
+message.getContentType()
 
-`uuid` - unique identifier for the message
+//returns the message sender object
+//This object has the first_name, last_name, email, phone
+message.getSender()
 
-You can use these fields to keep track of the messages and extract information out of them to help the bot respond sensibly.
+//returns the sender name in string
+//It takes a default name as argument which is a fallback if user object has no first or last names
+message.getSenderName(default_name = "")
+
+//returns message uuid; a unique identifier for message
+message.getUuid()
+
+//returns the conversation uuid of the message; a unique identifier for conversation
+message.getConversationUuid()
+
+//returns the message created time in timestamp format with seconds precision
+message.getCreatedAt()
+
+//returns boolean indicating if there is attachment with the message
+message.hasAttachment()
+
+//returns the `content_type` of the message if the message has any of the attachment types.
+//If the message is of `content_type` text, this method will return null
+message.whichAttachment()
+
+//returns boolean if message has attachment of type image
+message.hasImage()
+
+//returns boolean if message has attachment of type file
+message.hasFile()
+
+//returns boolean if message has attachment of type photo
+message.hasPhoto()
+
+//returns boolean if message has attachment of type audio
+message.hasAudio()
+
+//returns boolean if message has attachment of type video
+message.hasVideo()
+
+//returns boolean if message has attachment of type form_response
+message.hasForm()
+
+//returns boolean if message has attachment of type text
+message.isText()
+```
+
+#### Attachments
+You might want the bot to handle attachments in a sensible manner. The attachment property of the message object has convenient methods to access the attachments. Every message with attachment has `downloadAll` method to download the attachments to specified location.
+
+```
+if(message.hasAttachments()) {
+  //download all downloadable attachments to the specified path including form response.
+  //if form response has downloadable attachment like file or image, they are downloaded too with this method.
+  //The `downloadAll` method returns promise and so you can use `then` method to know if the download is completed.
+  //The resolving argument has the file names of the files downloaded
+  payload.message.getAttachments().downloadAll("./assets/downloads").then(function(values) {
+    //values are file names that are downloaded
+    let names = Array.isArray(values) ? values.join(", "): values;
+    avaamo.sendMessage(`I have downloaded **${names}** from ${payload.message.whichAttachment()} attachment`, conversation_uuid);
+  });
+}
+```
+Note: The path given will be created with 0777 permission if the path doesn't exist.
+
+#### Form Response Attachment
+Attachment type `form_response` is little different as they have both text and downloadable content. Moreover, the form response has multiple questions and corresponding responses. You can access them as given below:
+
+```
+if(message.hasForm()) {
+  /* calling `getFormResponse` on attachments in case of form response attachment will return a promise which resolves with all replies of the form.
+
+  Each element of this array is of type Reply. The object of type Reply has the following methods to access the reply values:
+
+  Returns boolean checking if the reply for this question has any downloadable asset.
+  reply.hasAttachments()
+
+  Returns boolean after downloading the downloadable attachments if present
+  reply.downloadAttachments(path, permission = 0777)
+
+  Returns the question object of the reply which has title of the question
+  reply.getQuestion()
+
+  Returns the actual answer entered by the user in the form for this question.
+  This might return string or array based on the question type.
+  reply.getResponse()
+  */
+
+  message.getAttachments().getFormResponse().then(function(replies) {
+    let msg = "";
+    replies.forEach(function(reply) {
+      let answer = reply.getResponse();
+      if(Array.isArray(answer)) {
+        answer = answer.join(", ");
+      }
+      msg += `${reply.getQuestion().title} :: ${answer}\n`;
+    });
+    console.log(`\n==> Form attachment ends!`);
+    avaamo.sendMessage(`Confirm your replies: \n${msg}`, conversation_uuid);
+  }).catch(function(e) {
+    console.log("Catch", e);
+  });
+}
+```
+
+On the attachments property, you can call methods like getForm, getReplies, getQuestions, getQuestionsReplies and download. All of them return promise with respective objects.
+
+If you want to know more about the forms itself(not form just response), call `getForm` method on the attachments property and it will return a promise which resolves with an object of type FormResponse which has the following methods to access the form:
+
+```
+//Returns form title
+message.attachments.getForm().then(function(form) {
+  //Return form title
+  form.getTitle();
+
+  //Returns form description
+  form.getDescription();
+
+  //Returns form uuid
+  form.getUuid()
+
+  //Returns form replies only which is array of stdClass objects
+  form.getReplies()
+
+  //Returns form questions only which is array of stdClass objects
+  form.getQuestions()
+
+  //Returns sender object which is a stdClass objects having properties first_name, last_name, email, phone
+  form.getSender()
+
+  //alias for getReplies
+  form.getAllResponses()
+
+  //Returns promise resolving with file name
+  form.downloadAllResponseAttachments(path, permission = 0777)
+
+  //Returns question object at given positions. Returns null if position is beyond number of questions
+  form.getQuestionAtPosition(position)
+
+  //Returns reply object at given positions. Returns null if position is beyond number of questions
+  //Starts with 0 index
+  form.getReplyAtPosition(position)
+
+  //Returns promise resolving with file names
+  //Starts with 0 index
+  //Downloads only the attachments at given question position.
+  form.downloadAttachmentsAtPosition(position, path, permission = 0777)
+
+  //Returns the answer entered by the user if the given position exists. Returns null if position is beyond number of questions
+  //Starts with 0 index
+  form.getResponseAtPosition(position)
+});
+```
+
+All these methods are of highly useful to read the form responses within the bot and response accordingly.
 
 ### Step 3.2 Responding back to the message
-Next critical part of the callback is to respond to the incoming messages. Once you extract the information from the message, you want to reply back with messages which can be text, file, image or card. The sample code in `bot_app.js` has example for each case.
+Next critical part of the callback is to respond to the incoming messages. Once you extract the information from the message, you want to reply back with messages which can be text, file, image or card. The sample code in `bot_app.php` has example for each case.
 
 Inside the callback, the Avaamo object is provided to send message back to the conversation. The object has methods to send text, file, image and card type messages to the conversation.
 
 ```
 //Send text message back to the same conversation
-avaamo.sendMessage("Hello user!", payload.conversation.uuid);
+avaamo.sendMessage("Hello user!", message.getConversationUuid());
 ```
 <img alt="text" src="/screenshots/text.png" width="500" />
 
 ```
 //Send a file back to the same conversation
-avaamo.sendFile("<path to your local file>", payload.conversation.uuid);
+avaamo.sendFile("<path to your local file>", message.getConversationUuid());
 ```
 <img alt="file" src="/screenshots/file.png" width="500" />
 
 ```
 //Send an image back to the same conversation
-avaamo.sendImage("<path to image>", "<Caption for image or Can be left empty>", payload.conversation.uuid);
+avaamo.sendImage("<path to image>", "<Caption for image or Can be left empty>", message.getConversationUuid());
 ```
 <img alt="image" src="/screenshots/image.png" width="500" />
 
@@ -137,7 +272,7 @@ let card = array(
     Link.get_go_to_forms_link("Open a Form", "63c906c3-553e-9680-c273-28d1e54da050", "Say Yes")
   )
 );
-avaamo.sendCard(card, "This is a sample card with rich text description, web link and deep links", payload.conversation.uuid);
+avaamo.sendCard(card, "This is a sample card with rich text description, web link and deep links", message.getConversationUuid());
 ```
 <img alt="card" src="/screenshots/card.png" width="500" />
 
@@ -207,9 +342,33 @@ let printAck = function(ack, avaamo) {
 }
 ```
 
-When you combine these four steps, you have a bot ready. You can execute the sample app using the command `node bot_app.js` after filling the bot-uuid and access-token.
+## Step 5: Implementing Activity callback
+Might not be very useful, but if in case you want to do something as soon the user launches the bot, like sending a welcome note, this callback will help a lot.
 
-Full [sample source] can be found here.
+This callback is also called with two arguments: the activity object and the Avaamo object.
 
-[sample source]: ./bot_app.js
+The activity object has `user` field, similar to the message object which has the information about the user who has launched the bot. It also has what time he/she has launched the bot and what activity type it is. The activity type will be "user_visit" as of now. It could change later. The following callback prints a message whenever the user visits the bot:
+
+```
+function printAcitivity(activity, avaamo) {
+  let name = "User", event = null;
+  if(activity.user) {
+    name = `${activity.user.first_name} ${activity.user.last_name}`;
+  }
+  if(activity.type === "user_visit") {
+    event = "visited";
+  }
+  const date = new Date(activity.created_at*1000);
+  console.log(`\n==> ${name} ${event} me at ${date}\n`);
+}
+```
+
+Note: All these callbacks are mandatory and are called with injecting the corresponding object and the avaamo instance.
+
+Note: The bot will acknowledge any message as soon as it receives one without any additional code.
+
+When you combine these five steps, you have a bot ready. You can execute the sample app using the command `php bot_app.php` after filling the bot-uuid and access-token. [Click here to see the full code sample].
+
+[Click here to see the full code sample]: ./bot_app.js
 [Avaamo Premium]: http://www.avaamo.com/premium.html
+[create a bot from the dashboard and grab the bot-uuid and access-token by following the steps mentioned in the wiki]: https://github.com/avaamo/java/wiki
