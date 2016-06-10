@@ -367,7 +367,7 @@ Note: All these callbacks are mandatory and are called with injecting the corres
 
 Note: The bot will acknowledge any message as soon as it receives one without any additional code.
 
-When you combine these five steps, you have a bot ready. You can execute the sample app using the command `php bot_app.php` after filling the bot-uuid and access-token. [Click here to see the full code sample].
+When you combine these five steps, you have a bot ready. You can execute the sample app using the command `node bot_app.js` after filling the bot-uuid and access-token. [Click here to see the full code sample].
 
 [Click here to see the full code sample]: ./bot_app.js
 [Avaamo Premium]: http://www.avaamo.com/premium.html
