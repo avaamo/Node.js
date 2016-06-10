@@ -244,19 +244,19 @@ Inside the callback, the Avaamo object is provided to send message back to the c
 //Send text message back to the same conversation
 avaamo.sendMessage("Hello user!", message.getConversationUuid());
 ```
-![Send Text](/screenshots/text.png)
+<img alt="text" src="/screenshots/text.png" width="500" />
 
 ```
 //Send a file back to the same conversation
 avaamo.sendFile("<path to your local file>", message.getConversationUuid());
 ```
-![Send file](/screenshots/file.png)
+<img alt="file" src="/screenshots/file.png" width="500" />
 
 ```
 //Send an image back to the same conversation
 avaamo.sendImage("<path to image>", "<Caption for image or Can be left empty>", message.getConversationUuid());
 ```
-![Send image](/screenshots/image.png)
+<img alt="image" src="/screenshots/image.png" width="500" />
 
 ```
 //Send a card back to the same conversation
@@ -272,7 +272,7 @@ let card = array(
 );
 avaamo.sendCard(card, "This is a sample card with rich text description, web link and deep links", message.getConversationUuid());
 ```
-![Send Card](/screenshots/card.png)
+<img alt="card" src="/screenshots/card.png" width="500" />
 
 You might be wondering "what is a card?". The card is a structured message type. It can have a title, description, showcase image and set of links. Links make the card very special. One can avoid natural language, context based interaction with the help of these links.
 
